@@ -1420,7 +1420,10 @@
                         new Chart(ctx, {
                             type: 'line',
                             data: {
-                                labels: Array.from({length: 24}, (_, i) => `${i}h`),
+                                labels: Array.from({length: 24}, (_, i) => {
+                                    const hours = 23 - i;
+                                    return `${hours}h`;
+                                }).reverse(),
                                 datasets: [{
                                     label: stock.name,
                                     data: chartData,
@@ -1493,7 +1496,10 @@
                     expandedChart = new Chart(ctx, {
                         type: 'line',
                         data: {
-                            labels: Array.from({length: 24}, (_, i) => `${i}h ago`),
+                            labels: Array.from({length: 24}, (_, i) => {
+                                const hours = 23 - i;
+                                return `${hours}h ago`;
+                            }).reverse(),
                             datasets: [{
                                 label: stock.name,
                                 data: stock.chartData,
