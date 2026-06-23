@@ -167,7 +167,7 @@
             font-size: 3.5rem;
         }
 
-        /* Chart Lines Background - Only Green and Red */
+        /* Large Blue Wave Background Chart Line */
         .chart-lines-bg {
             position: absolute;
             width: 100%;
@@ -176,42 +176,25 @@
             left: 0;
         }
 
-        .chart-line {
+        .wave-chart {
             position: absolute;
-            opacity: 0.25;
+            opacity: 0.2;
             pointer-events: none;
+            width: 100%;
+            height: 100%;
         }
 
-        .chart-line.green {
-            stroke: #00c853;
-            stroke-width: 4;
+        .wave-chart svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .wave-line {
+            stroke: #2196F3;
+            stroke-width: 6;
             stroke-linecap: round;
             fill: none;
-            filter: drop-shadow(0 0 8px rgba(0, 200, 83, 0.4));
-        }
-
-        .chart-line.red {
-            stroke: #ff4757;
-            stroke-width: 4;
-            stroke-linecap: round;
-            fill: none;
-            filter: drop-shadow(0 0 8px rgba(255, 71, 87, 0.4));
-        }
-
-        /* Mini Chart Area */
-        .mini-chart-area {
-            position: absolute;
-            opacity: 0.15;
-            pointer-events: none;
-            filter: blur(1px);
-        }
-
-        .mini-chart-area.green {
-            background: linear-gradient(180deg, rgba(0, 200, 83, 0.5) 0%, transparent 100%);
-        }
-
-        .mini-chart-area.red {
-            background: linear-gradient(180deg, rgba(255, 71, 87, 0.5) 0%, transparent 100%);
+            filter: drop-shadow(0 0 12px rgba(33, 150, 243, 0.5));
         }
 
         @keyframes float {
@@ -244,17 +227,12 @@
             }
         }
 
-        @keyframes moveDown {
+        @keyframes waveAnimation {
             0% {
-                transform: translateY(-100%);
-                opacity: 0.25;
-            }
-            50% {
-                opacity: 0.25;
+                transform: translateX(0px);
             }
             100% {
-                transform: translateY(100vh);
-                opacity: 0.15;
+                transform: translateX(100%);
             }
         }
 
@@ -1021,11 +999,8 @@
             <div class="bitcoin-logo">₿</div>
         </div>
 
-        <!-- Chart Lines Background - Only Green and Red -->
+        <!-- Large Blue Wave Chart Line Background -->
         <div class="chart-lines-bg" id="chartLinesBg"></div>
-
-        <!-- Mini Charts Background -->
-        <div class="mini-charts-bg" id="miniChartsBg"></div>
     </div>
 
     <!-- Navigation -->
@@ -1248,57 +1223,39 @@
     </footer>
 
     <script>
-        // Create animated chart lines in background - Only Green and Red (rising and falling)
-        function createAnimatedChartLines() {
+        // Create one large animated blue wave chart line
+        function createAnimatedBluWave() {
             const container = document.getElementById('chartLinesBg');
-            const types = ['green', 'red'];
             
-            for (let i = 0; i < 12; i++) {
-                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                svg.setAttribute('width', '350');
-                svg.setAttribute('height', '250');
-                svg.setAttribute('viewBox', '0 0 350 250');
-                svg.classList.add('chart-line', types[i % 2]);
-                
-                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                
-                // Generate rising or falling paths
-                let pathData = i % 2 === 0 ? 'M 0 200' : 'M 0 50'; // Start high for falling, low for rising
-                for (let x = 0; x <= 350; x += 35) {
-                    const isRising = i % 2 === 1;
-                    const trend = isRising ? -60 : 60; // Rising goes up, falling goes down
-                    const y = (i % 2 === 0 ? 200 : 50) + (x / 350) * trend + Math.sin(x / 50 + i) * 30;
-                    pathData += ` L ${x} ${y}`;
-                }
-                
-                path.setAttribute('d', pathData);
-                svg.appendChild(path);
-                
-                svg.style.left = Math.random() * window.innerWidth + 'px';
-                svg.style.top = Math.random() * window.innerHeight + 'px';
-                svg.style.animation = `moveDown ${10 + Math.random() * 6}s linear infinite`;
-                svg.style.animationDelay = Math.random() * 4 + 's';
-                
-                container.appendChild(svg);
-            }
-        }
-
-        // Create mini chart areas - More visible
-        function createMiniCharts() {
-            const container = document.getElementById('miniChartsBg');
-            const colors = ['green', 'red'];
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', '1200');
+            svg.setAttribute('height', '600');
+            svg.setAttribute('viewBox', '0 0 1200 600');
+            svg.classList.add('wave-chart');
             
-            for (let i = 0; i < 8; i++) {
-                const chart = document.createElement('div');
-                chart.classList.add('mini-chart-area', colors[i % 2]);
-                chart.style.width = Math.random() * 300 + 150 + 'px';
-                chart.style.height = Math.random() * 200 + 100 + 'px';
-                chart.style.left = Math.random() * (window.innerWidth - 200) + 'px';
-                chart.style.top = Math.random() * (window.innerHeight - 200) + 'px';
-                chart.style.borderRadius = '15px';
-                
-                container.appendChild(chart);
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            
+            // Generate large wavy path that rises and falls
+            let pathData = 'M 0 400';
+            for (let x = 0; x <= 1200; x += 40) {
+                const wave = Math.sin(x / 150) * 150;
+                const trend = (x / 1200) * 200 - 100;
+                const y = 400 + wave + trend;
+                pathData += ` L ${x} ${y}`;
             }
+            
+            path.setAttribute('d', pathData);
+            path.classList.add('wave-line');
+            svg.appendChild(path);
+            
+            svg.style.position = 'absolute';
+            svg.style.top = '50px';
+            svg.style.left = '0';
+            svg.style.width = '100%';
+            svg.style.height = '100%';
+            svg.style.opacity = '0.2';
+            
+            container.appendChild(svg);
         }
 
         // Mobile Menu Toggle
@@ -1720,8 +1677,7 @@
 
         // Initialize on page load
         window.addEventListener('load', () => {
-            createAnimatedChartLines();
-            createMiniCharts();
+            createAnimatedBluWave();
             initializeStocks();
             observeCards();
             updateStockPrices();
