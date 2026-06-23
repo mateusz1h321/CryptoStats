@@ -1,0 +1,1725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoStats - Calculate Your Profits</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #111111;
+            --bg-card: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --accent-primary: #ffd700;
+            --accent-secondary: #ffed4e;
+            --accent-gradient: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            --positive: #00c853;
+            --negative: #ff4757;
+            --border-color: #2a2a2a;
+            --glow-primary: rgba(0, 200, 83, 0.25);
+            --glow-secondary: rgba(255, 237, 78, 0.3);
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated Background Layer */
+        .background-layer {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        /* Ethereum Background */
+        .ethereum-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        .ethereum-logo {
+            position: absolute;
+            font-size: 4rem;
+            opacity: 0.06;
+            animation: float 8s ease-in-out infinite;
+            color: #627eea;
+        }
+
+        .ethereum-logo:nth-child(1) {
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+            font-size: 3rem;
+        }
+
+        .ethereum-logo:nth-child(2) {
+            top: 25%;
+            right: 15%;
+            animation-delay: 1s;
+            font-size: 3.5rem;
+        }
+
+        .ethereum-logo:nth-child(3) {
+            top: 50%;
+            left: 5%;
+            animation-delay: 2s;
+            font-size: 4rem;
+        }
+
+        .ethereum-logo:nth-child(4) {
+            bottom: 20%;
+            right: 10%;
+            animation-delay: 3s;
+            font-size: 3.5rem;
+        }
+
+        .ethereum-logo:nth-child(5) {
+            top: 70%;
+            left: 50%;
+            animation-delay: 1.5s;
+            font-size: 3rem;
+        }
+
+        .ethereum-logo:nth-child(6) {
+            bottom: 10%;
+            left: 20%;
+            animation-delay: 2.5s;
+            font-size: 3.5rem;
+        }
+
+        .ethereum-logo:nth-child(7) {
+            top: 35%;
+            right: 30%;
+            animation-delay: 0.5s;
+            font-size: 4rem;
+        }
+
+        .ethereum-logo:nth-child(8) {
+            bottom: 30%;
+            right: 40%;
+            animation-delay: 3.5s;
+            font-size: 3rem;
+        }
+
+        /* Bitcoin Logos Background */
+        .bitcoin-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        .bitcoin-logo {
+            position: absolute;
+            font-size: 3.5rem;
+            opacity: 0.12;
+            animation: floatBitcoin 10s ease-in-out infinite;
+            color: #f7931a;
+        }
+
+        .bitcoin-logo:nth-child(1) {
+            top: 15%;
+            right: 25%;
+            animation-delay: 0s;
+            font-size: 4rem;
+        }
+
+        .bitcoin-logo:nth-child(2) {
+            bottom: 25%;
+            left: 30%;
+            animation-delay: 2s;
+            font-size: 3.5rem;
+        }
+
+        .bitcoin-logo:nth-child(3) {
+            top: 55%;
+            right: 5%;
+            animation-delay: 4s;
+            font-size: 3.8rem;
+        }
+
+        .bitcoin-logo:nth-child(4) {
+            bottom: 15%;
+            right: 35%;
+            animation-delay: 1s;
+            font-size: 3.5rem;
+        }
+
+        /* Chart Lines Background - Only Green and Red */
+        .chart-lines-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        .chart-line {
+            position: absolute;
+            opacity: 0.25;
+            pointer-events: none;
+        }
+
+        .chart-line.green {
+            stroke: #00c853;
+            stroke-width: 4;
+            stroke-linecap: round;
+            fill: none;
+            filter: drop-shadow(0 0 8px rgba(0, 200, 83, 0.4));
+        }
+
+        .chart-line.red {
+            stroke: #ff4757;
+            stroke-width: 4;
+            stroke-linecap: round;
+            fill: none;
+            filter: drop-shadow(0 0 8px rgba(255, 71, 87, 0.4));
+        }
+
+        /* Mini Chart Area */
+        .mini-chart-area {
+            position: absolute;
+            opacity: 0.15;
+            pointer-events: none;
+            filter: blur(1px);
+        }
+
+        .mini-chart-area.green {
+            background: linear-gradient(180deg, rgba(0, 200, 83, 0.5) 0%, transparent 100%);
+        }
+
+        .mini-chart-area.red {
+            background: linear-gradient(180deg, rgba(255, 71, 87, 0.5) 0%, transparent 100%);
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+            25% {
+                transform: translateY(-30px) rotate(10deg);
+            }
+            50% {
+                transform: translateY(-50px) rotate(0deg);
+            }
+            75% {
+                transform: translateY(-30px) rotate(-10deg);
+            }
+        }
+
+        @keyframes floatBitcoin {
+            0%, 100% {
+                transform: translateY(0px) translateX(0px) rotate(0deg);
+            }
+            25% {
+                transform: translateY(-40px) translateX(20px) rotate(15deg);
+            }
+            50% {
+                transform: translateY(-60px) translateX(0px) rotate(0deg);
+            }
+            75% {
+                transform: translateY(-40px) translateX(-20px) rotate(-15deg);
+            }
+        }
+
+        @keyframes moveDown {
+            0% {
+                transform: translateY(-100%);
+                opacity: 0.25;
+            }
+            50% {
+                opacity: 0.25;
+            }
+            100% {
+                transform: translateY(100vh);
+                opacity: 0.15;
+            }
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+            padding: 1rem 2rem;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #ffd700 0%, #b8860b 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #000;
+        }
+
+        .logo-text {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-primary);
+        }
+
+        .mobile-menu {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+        }
+
+        .mobile-menu span {
+            width: 25px;
+            height: 2px;
+            background: var(--text-primary);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 6rem 2rem 4rem;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, var(--glow-primary) 0%, transparent 70%);
+            opacity: 0.3;
+            animation: pulse 4s ease-in-out infinite;
+            z-index: 0;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: 30%;
+            right: 20%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, var(--glow-secondary) 0%, transparent 70%);
+            opacity: 0.2;
+            animation: pulse 5s ease-in-out infinite reverse;
+            z-index: 0;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.5; }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 10vw, 6rem);
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: fadeInUp 1s ease;
+        }
+
+        .hero p {
+            font-size: clamp(1.1rem, 3vw, 1.5rem);
+            color: var(--text-secondary);
+            margin-bottom: 2.5rem;
+            animation: fadeInUp 1s ease 0.2s both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Section */
+        .section {
+            padding: 5rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+            font-size: 1.1rem;
+        }
+
+        /* Stock Tickers Grid */
+        .tickers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 4rem;
+        }
+
+        .ticker-card {
+            background: var(--bg-card);
+            border-radius: 15px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .ticker-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .ticker-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent-primary);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 40px var(--glow-primary);
+        }
+
+        .ticker-card:hover::before {
+            opacity: 1;
+        }
+
+        .ticker-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .ticker-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .ticker-name {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .ticker-price {
+            text-align: right;
+        }
+
+        .ticker-current-price {
+            font-size: 1.3rem;
+            font-weight: 700;
+            display: block;
+        }
+
+        .ticker-change {
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            display: inline-block;
+            background: rgba(0, 200, 83, 0.06);
+        }
+
+        .ticker-change.positive {
+            color: var(--positive);
+            background: rgba(0, 200, 83, 0.06);
+        }
+
+        .ticker-change.negative {
+            color: var(--negative);
+            background: rgba(255, 71, 87, 0.06);
+        }
+
+        .ticker-chart-container {
+            position: relative;
+            height: 120px;
+            margin-top: 1rem;
+            cursor: pointer;
+        }
+
+        .ticker-chart-container:hover {
+            opacity: 0.8;
+        }
+
+        .ticker-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 120px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .update-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        .expand-hint {
+            font-size: 0.75rem;
+            color: var(--accent-primary);
+            text-align: center;
+            margin-top: 0.5rem;
+            opacity: 0.7;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+            position: relative;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .modal-info h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.3rem;
+            color: var(--text-primary);
+        }
+
+        .modal-info p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .modal-close {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--accent-primary);
+        }
+
+        .modal-chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 1rem;
+        }
+
+        .modal-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            background: rgba(255, 215, 0, 0.05);
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-top: 0.3rem;
+        }
+
+        /* Calculators Grid */
+        .calculators-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .calculator-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .calculator-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .calculator-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-primary);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 60px var(--glow-primary);
+        }
+
+        .calculator-card:hover::before {
+            opacity: 1;
+        }
+
+        .calculator-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .calculator-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .calculator-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .input-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 0.9rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 20px var(--glow-primary);
+        }
+
+        .input-group input::placeholder {
+            color: #555;
+        }
+
+        .calculate-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            border: none;
+            border-radius: 10px;
+            color: #000;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 0.5rem;
+        }
+
+        .calculate-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px var(--glow-primary);
+        }
+
+        .results {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+            animation: slideDown 0.4s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .result-value {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .result-value.positive {
+            color: var(--positive);
+        }
+
+        .result-value.negative {
+            color: var(--negative);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 3rem 2rem;
+            margin-top: 4rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .footer-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent-primary);
+        }
+
+        .footer-copyright {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--bg-secondary);
+                flex-direction: column;
+                padding: 1rem 2rem;
+                gap: 1rem;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .nav-links.active {
+                display: flex;
+            }
+
+            .mobile-menu {
+                display: flex;
+            }
+
+            .hero {
+                padding: 8rem 1.5rem 4rem;
+            }
+
+            .section {
+                padding: 3rem 1.5rem;
+            }
+
+            .calculators-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tickers-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .footer-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .modal-content {
+                padding: 1.5rem;
+                max-height: 95vh;
+            }
+
+            .modal-chart-container {
+                height: 300px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .calculator-card {
+                padding: 1.5rem;
+            }
+
+            .ticker-card {
+                padding: 1rem;
+            }
+
+            .modal-info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Layer with all animations -->
+    <div class="background-layer">
+        <!-- Ethereum Background -->
+        <div class="ethereum-bg">
+            <div class="ethereum-logo">Ξ</div>
+            <div class="ethereum-logo">Ξ</div>
+            <div class="ethereum-logo">Ξ</div>
+            <div class="ethereum-logo">Ξ</div>
+            <div class="ethereum-logo">Ξ</div>
+            <div class="ethereum-logo">Ξ</div>
+            <div class="ethereum-logo">Ξ</div>
+            <div class="ethereum-logo">Ξ</div>
+        </div>
+
+        <!-- Bitcoin Background -->
+        <div class="bitcoin-bg">
+            <div class="bitcoin-logo">₿</div>
+            <div class="bitcoin-logo">₿</div>
+            <div class="bitcoin-logo">₿</div>
+            <div class="bitcoin-logo">₿</div>
+        </div>
+
+        <!-- Chart Lines Background - Only Green and Red -->
+        <div class="chart-lines-bg" id="chartLinesBg"></div>
+
+        <!-- Mini Charts Background -->
+        <div class="mini-charts-bg" id="miniChartsBg"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <div class="logo">
+                <div class="logo-icon">CS</div>
+                <span class="logo-text">CryptoStats</span>
+            </div>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#stocks">Stock Tracker</a></li>
+                <li><a href="#calculators">Calculators</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <div class="mobile-menu" id="mobileMenu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>CryptoStats</h1>
+            <p>Calculate your profits from stocks, Bitcoin, and compound interest investments. Monitor real-time stock prices and make informed financial decisions with our professional-grade tools.</p>
+        </div>
+    </section>
+
+    <!-- Stock Tickers Section -->
+    <section class="section" id="stocks">
+        <h2 class="section-title">Top 20 Stock Prices</h2>
+        <p class="section-subtitle">Real-time stock prices updated from market data - Click on chart to expand</p>
+        
+        <div class="tickers-grid" id="tickersGrid">
+            <!-- Will be populated by JavaScript -->
+        </div>
+    </section>
+
+    <!-- Chart Modal -->
+    <div id="chartModal" class="modal" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <div class="modal-info">
+                        <h2 id="modalName"></h2>
+                    </div>
+                </div>
+                <span class="modal-close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-chart-container">
+                <canvas id="expandedChart"></canvas>
+            </div>
+            <div class="modal-info-grid">
+                <div class="info-item">
+                    <div class="info-label">Current Price</div>
+                    <div class="info-value" id="modalPrice">$0.00</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">24h Change</div>
+                    <div class="info-value" id="modalChange">+0.00%</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">High (24h)</div>
+                    <div class="info-value" id="modalHigh">$0.00</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Low (24h)</div>
+                    <div class="info-value" id="modalLow">$0.00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calculators Section -->
+    <section class="section" id="calculators">
+        <h2 class="section-title">Investment Calculators</h2>
+        <p class="section-subtitle">Choose a calculator and analyze your investment potential</p>
+        
+        <div class="calculators-grid">
+            <!-- Stock Profit Calculator -->
+            <div class="calculator-card">
+                <div class="calculator-header">
+                    <div class="calculator-icon">📈</div>
+                    <h3 class="calculator-title">Stock Profit Calculator</h3>
+                </div>
+                <div class="input-group">
+                    <label>Investment Amount ($)</label>
+                    <input type="number" id="stockInvestment" placeholder="10000" min="0" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Buy Price per Share ($)</label>
+                    <input type="number" id="stockBuyPrice" placeholder="100" min="0" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Sell Price per Share ($)</label>
+                    <input type="number" id="stockSellPrice" placeholder="150" min="0" step="0.01">
+                </div>
+                <button class="calculate-btn" onclick="calculateStock()">Calculate Profit</button>
+                <div class="results" id="stockResults">
+                    <div class="result-item">
+                        <span class="result-label">Number of Shares</span>
+                        <span class="result-value" id="stockShares">--</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Profit / Loss</span>
+                        <span class="result-value" id="stockProfit">$0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Return Percentage</span>
+                        <span class="result-value" id="stockPercent">0%</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Final Portfolio Value</span>
+                        <span class="result-value" id="stockFinal">$0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bitcoin Profit Calculator -->
+            <div class="calculator-card">
+                <div class="calculator-header">
+                    <div class="calculator-icon">₿</div>
+                    <h3 class="calculator-title">Bitcoin Profit Calculator</h3>
+                </div>
+                <div class="input-group">
+                    <label>Investment Amount ($)</label>
+                    <input type="number" id="btcInvestment" placeholder="5000" min="0" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Bitcoin Buy Price ($)</label>
+                    <input type="number" id="btcBuyPrice" placeholder="40000" min="0" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Bitcoin Sell Price ($)</label>
+                    <input type="number" id="btcSellPrice" placeholder="60000" min="0" step="0.01">
+                </div>
+                <button class="calculate-btn" onclick="calculateBitcoin()">Calculate Profit</button>
+                <div class="results" id="btcResults">
+                    <div class="result-item">
+                        <span class="result-label">Bitcoin Bought</span>
+                        <span class="result-value" id="btcAmount">-- BTC</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Profit / Loss</span>
+                        <span class="result-value" id="btcProfit">$0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Return Percentage</span>
+                        <span class="result-value" id="btcPercent">0%</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Final Value</span>
+                        <span class="result-value" id="btcFinal">$0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compound Interest Calculator -->
+            <div class="calculator-card">
+                <div class="calculator-header">
+                    <div class="calculator-icon">💰</div>
+                    <h3 class="calculator-title">Compound Interest Calculator</h3>
+                </div>
+                <div class="input-group">
+                    <label>Initial Investment ($)</label>
+                    <input type="number" id="compoundInitial" placeholder="10000" min="0" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Monthly Contribution ($)</label>
+                    <input type="number" id="compoundMonthly" placeholder="500" min="0" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Monthly Return (%)</label>
+                    <input type="number" id="compoundReturn" placeholder="2.5" min="0" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Investment Duration (Months)</label>
+                    <input type="number" id="compoundDuration" placeholder="24" min="1" step="1">
+                </div>
+                <button class="calculate-btn" onclick="calculateCompound()">Calculate Growth</button>
+                <div class="results" id="compoundResults">
+                    <div class="result-item">
+                        <span class="result-label">Total Invested</span>
+                        <span class="result-value" id="compoundInvested">$0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Total Interest Earned</span>
+                        <span class="result-value positive" id="compoundInterest">$0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Final Portfolio Value</span>
+                        <span class="result-value" id="compoundFinal">$0</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Total Profit</span>
+                        <span class="result-value" id="compoundProfit">$0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">CryptoStats</div>
+            <div class="footer-links">
+                <a href="#stocks">Stock Tracker</a>
+                <a href="#calculators">Calculators</a>
+                <a href="#about">About</a>
+                <a href="#contact">Contact</a>
+            </div>
+            <div class="footer-copyright">
+                © 2024 CryptoStats. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Create animated chart lines in background - Only Green and Red (rising and falling)
+        function createAnimatedChartLines() {
+            const container = document.getElementById('chartLinesBg');
+            const types = ['green', 'red'];
+            
+            for (let i = 0; i < 12; i++) {
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('width', '350');
+                svg.setAttribute('height', '250');
+                svg.setAttribute('viewBox', '0 0 350 250');
+                svg.classList.add('chart-line', types[i % 2]);
+                
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                
+                // Generate rising or falling paths
+                let pathData = i % 2 === 0 ? 'M 0 200' : 'M 0 50'; // Start high for falling, low for rising
+                for (let x = 0; x <= 350; x += 35) {
+                    const isRising = i % 2 === 1;
+                    const trend = isRising ? -60 : 60; // Rising goes up, falling goes down
+                    const y = (i % 2 === 0 ? 200 : 50) + (x / 350) * trend + Math.sin(x / 50 + i) * 30;
+                    pathData += ` L ${x} ${y}`;
+                }
+                
+                path.setAttribute('d', pathData);
+                svg.appendChild(path);
+                
+                svg.style.left = Math.random() * window.innerWidth + 'px';
+                svg.style.top = Math.random() * window.innerHeight + 'px';
+                svg.style.animation = `moveDown ${10 + Math.random() * 6}s linear infinite`;
+                svg.style.animationDelay = Math.random() * 4 + 's';
+                
+                container.appendChild(svg);
+            }
+        }
+
+        // Create mini chart areas - More visible
+        function createMiniCharts() {
+            const container = document.getElementById('miniChartsBg');
+            const colors = ['green', 'red'];
+            
+            for (let i = 0; i < 8; i++) {
+                const chart = document.createElement('div');
+                chart.classList.add('mini-chart-area', colors[i % 2]);
+                chart.style.width = Math.random() * 300 + 150 + 'px';
+                chart.style.height = Math.random() * 200 + 100 + 'px';
+                chart.style.left = Math.random() * (window.innerWidth - 200) + 'px';
+                chart.style.top = Math.random() * (window.innerHeight - 200) + 'px';
+                chart.style.borderRadius = '15px';
+                
+                container.appendChild(chart);
+            }
+        }
+
+        // Mobile Menu Toggle
+        const mobileMenu = document.getElementById('mobileMenu');
+        const navLinks = document.getElementById('navLinks');
+
+        mobileMenu.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('active');
+            });
+        });
+
+        // Format currency
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(value);
+        }
+
+        // Format percentage
+        function formatPercent(value) {
+            const sign = value >= 0 ? '+' : '';
+            return `${sign}${value.toFixed(2)}%`;
+        }
+
+        // Stock data
+        const topStocks = [
+            { symbol: 'AAPL', name: 'Apple', price: 189.50 },
+            { symbol: 'MSFT', name: 'Microsoft', price: 378.91 },
+            { symbol: 'GOOGL', name: 'Google', price: 140.80 },
+            { symbol: 'AMZN', name: 'Amazon', price: 182.52 },
+            { symbol: 'NVDA', name: 'NVIDIA', price: 135.47 },
+            { symbol: 'META', name: 'Meta', price: 501.54 },
+            { symbol: 'TSLA', name: 'Tesla', price: 243.80 },
+            { symbol: 'BRK.B', name: 'Berkshire Hathaway', price: 401.32 },
+            { symbol: 'JNJ', name: 'Johnson & Johnson', price: 160.45 },
+            { symbol: 'V', name: 'Visa', price: 265.30 },
+            { symbol: 'WMT', name: 'Walmart', price: 88.64 },
+            { symbol: 'JPM', name: 'JPMorgan Chase', price: 195.72 },
+            { symbol: 'PG', name: 'Procter & Gamble', price: 165.42 },
+            { symbol: 'MA', name: 'Mastercard', price: 458.90 },
+            { symbol: 'HD', name: 'Home Depot', price: 395.61 },
+            { symbol: 'DIS', name: 'Disney', price: 92.15 },
+            { symbol: 'KO', name: 'Coca-Cola', price: 61.28 },
+            { symbol: 'BA', name: 'Boeing', price: 181.52 },
+            { symbol: 'NFLX', name: 'Netflix', price: 247.89 },
+            { symbol: 'IBM', name: 'IBM', price: 188.75 }
+        ];
+
+        let currentExpandedStock = null;
+        let expandedChart = null;
+
+        // Generate mock historical data
+        function generateMockChartData(basePrice, volatility = 0.02) {
+            const data = [];
+            let price = basePrice;
+            for (let i = 0; i < 24; i++) {
+                const change = (Math.random() - 0.5) * 2 * volatility * price;
+                price = Math.max(price + change, basePrice * 0.9);
+                data.push(Math.round(price * 100) / 100);
+            }
+            return data;
+        }
+
+        // Initialize stock tickers
+        function initializeStocks() {
+            const tickersGrid = document.getElementById('tickersGrid');
+            tickersGrid.innerHTML = '';
+
+            topStocks.forEach((stock, index) => {
+                const chartData = generateMockChartData(stock.price);
+                const change = chartData[chartData.length - 1] - chartData[0];
+                const changePercent = (change / chartData[0]) * 100;
+                const isPositive = changePercent >= 0;
+                const high = Math.max(...chartData);
+                const low = Math.min(...chartData);
+
+                const tickerCard = document.createElement('div');
+                tickerCard.className = 'ticker-card';
+                tickerCard.innerHTML = `
+                    <div class="ticker-header">
+                        <div class="ticker-info">
+                            <span class="ticker-name">${stock.name}</span>
+                        </div>
+                        <div class="ticker-price">
+                            <span class="ticker-current-price">${formatCurrency(stock.price)}</span>
+                            <span class="ticker-change ${isPositive ? 'positive' : 'negative'}">
+                                ${isPositive ? '▲' : '▼'} ${Math.abs(changePercent).toFixed(2)}%
+                            </span>
+                        </div>
+                    </div>
+                    <div class="ticker-chart-container" onclick="expandChart(${index}, event)">
+                        <canvas id="chart-${index}"></canvas>
+                        <div class="expand-hint">Click to expand</div>
+                    </div>
+                    <div class="update-time">Updated: ${new Date().toLocaleTimeString()}</div>
+                `;
+                
+                tickersGrid.appendChild(tickerCard);
+
+                // Store data for modal
+                stock.chartData = chartData;
+                stock.changePercent = changePercent;
+                stock.high = high;
+                stock.low = low;
+                stock.change = change;
+
+                // Create chart
+                setTimeout(() => {
+                    const ctx = document.getElementById(`chart-${index}`);
+                    if (ctx) {
+                        new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: Array.from({length: 24}, (_, i) => `${i}h`),
+                                datasets: [{
+                                    label: stock.name,
+                                    data: chartData,
+                                    borderColor: isPositive ? '#00c853' : '#ff4757',
+                                    backgroundColor: isPositive ? 'rgba(0,200,83,0.08)' : 'rgba(255,71,87,0.08)',
+                                    borderWidth: 2,
+                                    fill: true,
+                                    tension: 0.4,
+                                    pointRadius: 0,
+                                    pointHoverRadius: 4,
+                                    pointBackgroundColor: isPositive ? '#00c853' : '#ff4757'
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    }
+                                },
+                                scales: {
+                                    x: {
+                                        display: false,
+                                        grid: {
+                                            display: false
+                                        }
+                                    },
+                                    y: {
+                                        display: false,
+                                        grid: {
+                                            display: false
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }, 100);
+            });
+        }
+
+        // Expand chart in modal
+        function expandChart(index, event) {
+            event.stopPropagation();
+            const stock = topStocks[index];
+            const isPositive = stock.changePercent >= 0;
+
+            currentExpandedStock = stock;
+
+            document.getElementById('modalName').textContent = stock.name;
+            document.getElementById('modalPrice').textContent = formatCurrency(stock.price);
+            document.getElementById('modalChange').textContent = formatPercent(stock.changePercent);
+            document.getElementById('modalHigh').textContent = formatCurrency(stock.high);
+            document.getElementById('modalLow').textContent = formatCurrency(stock.low);
+
+            // Update modal change color
+            const changeEl = document.getElementById('modalChange');
+            changeEl.style.color = isPositive ? '#00c853' : '#ff4757';
+
+            // Destroy old chart if exists
+            if (expandedChart) {
+                expandedChart.destroy();
+            }
+
+            // Create expanded chart
+            setTimeout(() => {
+                const ctx = document.getElementById('expandedChart');
+                if (ctx) {
+                    expandedChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: Array.from({length: 24}, (_, i) => `${i}h ago`),
+                            datasets: [{
+                                label: stock.name,
+                                data: stock.chartData,
+                                borderColor: isPositive ? '#00c853' : '#ff4757',
+                                backgroundColor: isPositive ? 'rgba(0,200,83,0.08)' : 'rgba(255,71,87,0.08)',
+                                borderWidth: 3,
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: 4,
+                                pointHoverRadius: 8,
+                                pointBackgroundColor: isPositive ? '#00c853' : '#ff4757'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    labels: {
+                                        color: '#ffffff'
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    display: true,
+                                    ticks: {
+                                        color: '#a0a0a0'
+                                    },
+                                    grid: {
+                                        color: '#2a2a2a'
+                                    }
+                                },
+                                y: {
+                                    display: true,
+                                    ticks: {
+                                        color: '#a0a0a0'
+                                    },
+                                    grid: {
+                                        color: '#2a2a2a'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }, 100);
+
+            document.getElementById('chartModal').classList.add('active');
+        }
+
+        // Close modal
+        function closeModal(event) {
+            if (event && event.target.id !== 'chartModal') return;
+            document.getElementById('chartModal').classList.remove('active');
+            if (expandedChart) {
+                expandedChart.destroy();
+                expandedChart = null;
+            }
+        }
+
+        // Update stock prices periodically
+        function updateStockPrices() {
+            setInterval(() => {
+                topStocks.forEach(stock => {
+                    const change = (Math.random() - 0.5) * 2;
+                    stock.price = Math.max(stock.price + change, stock.price * 0.95);
+                });
+                initializeStocks();
+            }, 30000);
+        }
+
+        // Stock Profit Calculator
+        function calculateStock() {
+            const investment = parseFloat(document.getElementById('stockInvestment').value) || 0;
+            const buyPrice = parseFloat(document.getElementById('stockBuyPrice').value) || 0;
+            const sellPrice = parseFloat(document.getElementById('stockSellPrice').value) || 0;
+
+            if (investment <= 0 || buyPrice <= 0) {
+                alert('Please enter valid positive numbers');
+                return;
+            }
+
+            const shares = investment / buyPrice;
+            const finalValue = shares * sellPrice;
+            const profit = finalValue - investment;
+            const percentReturn = ((sellPrice - buyPrice) / buyPrice) * 100;
+
+            document.getElementById('stockShares').textContent = shares.toFixed(2);
+            
+            const profitEl = document.getElementById('stockProfit');
+            profitEl.textContent = formatCurrency(profit);
+            profitEl.className = `result-value ${profit >= 0 ? 'positive' : 'negative'}`;
+            
+            const percentEl = document.getElementById('stockPercent');
+            percentEl.textContent = formatPercent(percentReturn);
+            percentEl.className = `result-value ${percentReturn >= 0 ? 'positive' : 'negative'}`;
+            
+            document.getElementById('stockFinal').textContent = formatCurrency(finalValue);
+            
+            document.getElementById('stockResults').classList.add('show');
+        }
+
+        // Bitcoin Profit Calculator
+        function calculateBitcoin() {
+            const investment = parseFloat(document.getElementById('btcInvestment').value) || 0;
+            const buyPrice = parseFloat(document.getElementById('btcBuyPrice').value) || 0;
+            const sellPrice = parseFloat(document.getElementById('btcSellPrice').value) || 0;
+
+            if (investment <= 0 || buyPrice <= 0) {
+                alert('Please enter valid positive numbers');
+                return;
+            }
+
+            const btcAmount = investment / buyPrice;
+            const finalValue = btcAmount * sellPrice;
+            const profit = finalValue - investment;
+            const percentReturn = ((sellPrice - buyPrice) / buyPrice) * 100;
+
+            document.getElementById('btcAmount').textContent = btcAmount.toFixed(8) + ' BTC';
+            
+            const profitEl = document.getElementById('btcProfit');
+            profitEl.textContent = formatCurrency(profit);
+            profitEl.className = `result-value ${profit >= 0 ? 'positive' : 'negative'}`;
+            
+            const percentEl = document.getElementById('btcPercent');
+            percentEl.textContent = formatPercent(percentReturn);
+            percentEl.className = `result-value ${percentReturn >= 0 ? 'positive' : 'negative'}`;
+            
+            document.getElementById('btcFinal').textContent = formatCurrency(finalValue);
+            
+            document.getElementById('btcResults').classList.add('show');
+        }
+
+        // Compound Interest Calculator
+        function calculateCompound() {
+            const initial = parseFloat(document.getElementById('compoundInitial').value) || 0;
+            const monthly = parseFloat(document.getElementById('compoundMonthly').value) || 0;
+            const returnRate = parseFloat(document.getElementById('compoundReturn').value) / 100 || 0;
+            const duration = parseInt(document.getElementById('compoundDuration').value) || 0;
+
+            if (duration <= 0 || (initial <= 0 && monthly <= 0)) {
+                alert('Please enter valid positive numbers');
+                return;
+            }
+
+            let balance = initial;
+            const totalContributions = initial + (monthly * duration);
+
+            for (let i = 0; i < duration; i++) {
+                balance = balance * (1 + returnRate) + monthly;
+            }
+
+            const totalInterest = balance - totalContributions;
+            const totalProfit = totalInterest;
+
+            document.getElementById('compoundInvested').textContent = formatCurrency(totalContributions);
+            
+            const interestEl = document.getElementById('compoundInterest');
+            interestEl.textContent = formatCurrency(totalInterest);
+            interestEl.className = `result-value ${totalInterest >= 0 ? 'positive' : 'negative'}`;
+            
+            document.getElementById('compoundFinal').textContent = formatCurrency(balance);
+            
+            const profitEl = document.getElementById('compoundProfit');
+            profitEl.textContent = formatCurrency(totalProfit);
+            profitEl.className = `result-value ${totalProfit >= 0 ? 'positive' : 'negative'}`;
+            
+            document.getElementById('compoundResults').classList.add('show');
+        }
+
+        // Smooth scroll for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe dynamic elements after initialization
+        function observeCards() {
+            document.querySelectorAll('.calculator-card').forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px)';
+                card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(card);
+            });
+
+            document.querySelectorAll('.ticker-card').forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px)';
+                card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(card);
+            });
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            createAnimatedChartLines();
+            createMiniCharts();
+            initializeStocks();
+            observeCards();
+            updateStockPrices();
+        });
+    </script>
+</body>
+</html>
